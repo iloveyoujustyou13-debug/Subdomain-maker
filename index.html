@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Subdomain Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: #0b1120;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            width: 100%;
+            background: #1a2332;
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+            border: 1px solid #2a3a4a;
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #fff; font-size: 30px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .header h1 i { color: #4facfe; }
+        .header p { color: #8899aa; margin-top: 8px; font-size: 15px; border-top: 1px solid #2a3a4a; padding-top: 12px; }
+        .header p i { color: #fbbf24; margin-right: 6px; }
+
+        .config-box {
+            background: #0f1926;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 28px;
+            border: 1px solid #2a3a4a;
+        }
+        .config-box h3 { color: #cbd5e1; font-size: 17px; margin-bottom: 18px; }
+        .config-box h3 i { color: #fbbf24; margin-right: 10px; }
+
+        .row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 18px; }
+        .field { flex: 1; min-width: 200px; }
+        .field label { display: block; color: #94a3b8; font-size: 13px; margin-bottom: 5px; font-weight: 600; }
+        .field label a {
+            color: #4facfe;
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+        .field label a:hover { text-decoration: underline; }
+        .field input, .field select {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 10px;
+            background: #0b1120;
+            border: 1px solid #2a3a4a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+            appearance: auto;
+        }
+        .field select option { background: #1a2332; color: #fff; }
+        .field input:focus, .field select:focus { border-color: #4facfe; box-shadow: 0 0 0 3px rgba(79,172,254,0.15); }
+        .field input::placeholder { color: #475569; }
+
+        .btn-save-config {
+            background: #2d3748;
+            color: #e2e8f0;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-save-config:hover { background: #4a5568; transform: scale(1.02); }
+
+        .create-section {
+            background: #0f1926;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #2a3a4a;
+        }
+        .create-section h3 { color: #cbd5e1; font-size: 18px; margin-bottom: 5px; }
+        .create-section h3 i { color: #4facfe; margin-right: 8px; }
+        .create-section .sub-hint { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+
+        .input-group { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .input-group input {
+            flex: 2;
+            min-width: 200px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #0b1120;
+            border: 1px solid #2a3a4a;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+        .input-group input:focus { border-color: #4facfe; }
+        .input-group .domain-suffix {
+            color: #94a3b8;
+            font-size: 16px;
+            font-weight: 500;
+            background: #1a2332;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px dashed #2a3a4a;
+        }
+        .btn-create {
+            padding: 14px 35px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-create:hover { transform: scale(1.04); box-shadow: 0 8px 25px rgba(79,172,254,0.4); }
+
+        .status-box {
+            background: #0b1120;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-top: 18px;
+            border-left: 4px solid #4facfe;
+            color: #e2e8f0;
+            font-size: 14px;
+            display: none;
+        }
+        .status-box.error { border-left-color: #fc8181; }
+        .status-box.success { border-left-color: #68d391; }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 0.5fr;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #0f1926;
+            border-radius: 10px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .subdomain-list { max-height: 250px; overflow-y: auto; }
+        .list-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 0.5fr;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #1a2332;
+            color: #e2e8f0;
+        }
+        .list-item .status { color: #68d391; font-size: 13px; }
+        .btn-delete { background: none; border: none; color: #64748b; cursor: pointer; font-size: 16px; }
+        .btn-delete:hover { color: #fc8181; }
+
+        .empty-state { text-align: center; padding: 30px; color: #475569; }
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #1e293b; color: #fff; padding: 15px 28px;
+            border-radius: 12px; border-left: 5px solid #4facfe;
+            transform: translateY(100px); opacity: 0;
+            transition: 0.5s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-left-color: #fc8181; }
+
+        .footer-note {
+            margin-top: 25px;
+            background: #0b1120;
+            padding: 15px;
+            border-radius: 12px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: center;
+            border: 1px solid #1a2332;
+        }
+        .footer-note i { color: #fbbf24; margin-right: 5px; }
+        .footer-note a { color: #4facfe; text-decoration: none; }
+
+        /* Tooltip / Help box */
+        .help-box {
+            display: none;
+            background: #0f1926;
+            border: 1px solid #2a3a4a;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-top: 15px;
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .help-box.show { display: block; }
+        .help-box h4 { color: #fff; margin-bottom: 10px; }
+        .help-box ol { padding-left: 22px; margin-bottom: 10px; }
+        .help-box ol li { margin-bottom: 6px; }
+        .help-box a { color: #4facfe; text-decoration: none; }
+        .help-box a:hover { text-decoration: underline; }
+        .help-box .note { color: #fbbf24; font-weight: 600; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            .list-header, .list-item { grid-template-columns: 1.5fr 1fr 0.5fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-rocket"></i> Public Subdomain Engine</h1>
+        <p><i class="fas fa-users"></i> Anyone can create subdomains on their own domain using their Hostinger or GoDaddy account.</p>
+    </div>
+
+    <!-- Config Panel -->
+    <div class="config-box">
+        <h3><i class="fas fa-key"></i> Your Account Configuration (Private)</h3>
+        <div class="row">
+            <div class="field">
+                <label><i class="fas fa-tag"></i> Provider</label>
+                <select id="providerSelect">
+                    <option value="hostinger">Hostinger</option>
+                    <option value="godaddy">GoDaddy</option>
+                </select>
+            </div>
+            <div class="field">
+                <label><i class="fas fa-globe"></i> Your Domain</label>
+                <input type="text" id="domainInput" placeholder="example.com">
+            </div>
+            <div class="field">
+                <label><i class="fas fa-user"></i> Username / API Key</label>
+                <input type="text" id="usernameInput" placeholder="Your username or API Key">
+            </div>
+            <div class="field">
+                <label>
+                    <i class="fas fa-shield-alt"></i> API Token / Secret
+                    <a href="#" id="apiHelpLink"><i class="fas fa-question-circle"></i> How to get it?</a>
+                </label>
+                <input type="password" id="tokenInput" placeholder="API Token or Secret">
+            </div>
+        </div>
+
+        <!-- Help Box -->
+        <div id="apiHelpBox" class="help-box">
+            <h4><i class="fas fa-info-circle"></i> How to get your API credentials?</h4>
+            <div id="helpContent">
+                <!-- Content loaded dynamically based on provider -->
+            </div>
+            <button onclick="closeHelp()" style="margin-top:10px; background:#2d3748; border:none; color:#fff; padding:6px 18px; border-radius:8px; cursor:pointer;">Close</button>
+        </div>
+
+        <button class="btn-save-config" onclick="saveConfig()"><i class="fas fa-save"></i> Save Configuration</button>
+        <span id="configStatus" style="color:#68d391; margin-left:18px; font-size:14px;"></span>
+    </div>
+
+    <!-- Create Subdomain -->
+    <div class="create-section">
+        <h3><i class="fas fa-plus-circle"></i> Create New Subdomain</h3>
+        <div class="sub-hint">Enter the subdomain name (e.g., blog, shop, mail) and click "Create".</div>
+        <div class="input-group">
+            <input type="text" id="subInput" placeholder="Subdomain name (letters, numbers, hyphens)" autofocus>
+            <span class="domain-suffix" id="displayDomain">.yourdomain.com</span>
+            <button class="btn-create" onclick="createSubdomain()"><i class="fas fa-bolt"></i> Create</button>
+        </div>
+        <div id="statusMessage" class="status-box"></div>
+    </div>
+
+    <!-- Subdomain List -->
+    <div style="margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; color:#94a3b8; font-size:14px;">
+            <span><i class="fas fa-list"></i> Your Subdomains</span>
+            <span id="totalCount">0</span>
+        </div>
+        <div class="list-header">
+            <span>Subdomain URL</span>
+            <span>Status</span>
+            <span style="text-align:end;">Action</span>
+        </div>
+        <div class="subdomain-list" id="subdomainList">
+            <div class="empty-state" id="emptyState"><i class="fas fa-box-open"></i><p>No subdomains created yet. Fill in the form above.</p></div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <i class="fas fa-info-circle"></i> Your API credentials are never stored on our server. They are sent directly from your browser to our backend to communicate with Hostinger or GoDaddy.
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Load from localStorage
+    let subdomains = JSON.parse(localStorage.getItem('publicSubdomains')) || [];
+    let config = JSON.parse(localStorage.getItem('publicSubdomainConfig')) || {};
+
+    // Help content for each provider
+    const helpContent = {
+        hostinger: `
+            <ol>
+                <li>Log in to your <a href="https://hpanel.hostinger.com/" target="_blank">Hostinger hPanel</a>.</li>
+                <li>Go to <strong>Account Settings</strong> → <strong>API</strong> (or visit <a href="https://hpanel.hostinger.com/profile/api" target="_blank">https://hpanel.hostinger.com/profile/api</a> directly).[reference:0]</li>
+                <li>Click <strong>Create Token</strong>.</li>
+                <li>Give it a name and set an expiration date (optional).[reference:1]</li>
+                <li>Copy the token and paste it in the <strong>API Token</strong> field above.</li>
+            </ol>
+            <div class="note">⚠️ The token will not be shown again after you refresh the page. Save it securely!</div>
+        `,
+        godaddy: `
+            <ol>
+                <li>Go to the <a href="https://developer.godaddy.com/keys" target="_blank">GoDaddy Developer Portal</a>.[reference:2]</li>
+                <li>Log in with your GoDaddy account credentials.</li>
+                <li>Click <strong>Create New API Key</strong>.</li>
+                <li>You will receive an <strong>API Key</strong> and an <strong>API Secret</strong>.[reference:3]</li>
+                <li>Paste the <strong>API Key</strong> in the <strong>Username / API Key</strong> field and the <strong>API Secret</strong> in the <strong>API Token / Secret</strong> field.</li>
+            </ol>
+            <div class="note">💡 Your first key will be for the OTE (test) environment. Create a separate production key when you're ready to go live.[reference:4]</div>
+        `
+    };
+
+    function loadConfig() {
+        if (config.provider) document.getElementById('providerSelect').value = config.provider;
+        if (config.domain) document.getElementById('domainInput').value = config.domain;
+        if (config.username) document.getElementById('usernameInput').value = config.username;
+        if (config.token) document.getElementById('tokenInput').value = config.token;
+        updateDomainDisplay();
+        renderList();
+        updateHelpContent();
+    }
+
+    function updateDomainDisplay() {
+        const domain = document.getElementById('domainInput').value || 'yourdomain.com';
+        document.getElementById('displayDomain').textContent = '.' + domain;
+    }
+    document.getElementById('domainInput').addEventListener('input', updateDomainDisplay);
+
+    function updateHelpContent() {
+        const provider = document.getElementById('providerSelect').value;
+        document.getElementById('helpContent').innerHTML = helpContent[provider] || helpContent.hostinger;
+    }
+    document.getElementById('providerSelect').addEventListener('change', updateHelpContent);
+
+    function toggleHelp() {
+        const box = document.getElementById('apiHelpBox');
+        box.classList.toggle('show');
+        if (box.classList.contains('show')) {
+            updateHelpContent();
+        }
+    }
+
+    function closeHelp() {
+        document.getElementById('apiHelpBox').classList.remove('show');
+    }
+
+    document.getElementById('apiHelpLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleHelp();
+    });
+
+    function saveConfig() {
+        const provider = document.getElementById('providerSelect').value;
+        const domain = document.getElementById('domainInput').value.trim();
+        const username = document.getElementById('usernameInput').value.trim();
+        const token = document.getElementById('tokenInput').value.trim();
+        if (!domain || !username || !token) {
+            showToast('Please fill in all fields!', 'error');
+            return;
+        }
+        config = { provider, domain, username, token };
+        localStorage.setItem('publicSubdomainConfig', JSON.stringify(config));
+        document.getElementById('configStatus').textContent = '✅ Saved successfully!';
+        showToast('Configuration saved successfully!', 'success');
+        updateDomainDisplay();
+        closeHelp();
+    }
+
+    function createSubdomain() {
+        const name = document.getElementById('subInput').value.trim().toLowerCase();
+        const provider = document.getElementById('providerSelect').value;
+        const domain = document.getElementById('domainInput').value.trim();
+        const username = document.getElementById('usernameInput').value.trim();
+        const token = document.getElementById('tokenInput').value.trim();
+
+        if (!name) { showToast('Please enter a subdomain name.', 'error'); return; }
+        if (!/^[a-z0-9-]+$/.test(name)) { showToast('Only lowercase letters, numbers, and hyphens are allowed.', 'error'); return; }
+        if (!domain || !username || !token) { showToast('Please save your configuration first!', 'error'); return; }
+
+        const statusDiv = document.getElementById('statusMessage');
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'status-box';
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating your subdomain... Please wait.';
+
+        fetch('/api/create-subdomain.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, domain, username, api_token: token, subdomain: name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.className = 'status-box success';
+                statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.message}`;
+                subdomains.push(name);
+                localStorage.setItem('publicSubdomains', JSON.stringify(subdomains));
+                renderList();
+                document.getElementById('subInput').value = '';
+                showToast(data.message, 'success');
+            } else {
+                statusDiv.className = 'status-box error';
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.message}`;
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            statusDiv.className = 'status-box error';
+            statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Cannot connect to server. Please check your network.`;
+            showToast('Server error!', 'error');
+        });
+    }
+
+    function deleteSubdomain(index) {
+        if (confirm('Delete this subdomain from the list?')) {
+            subdomains.splice(index, 1);
+            localStorage.setItem('publicSubdomains', JSON.stringify(subdomains));
+            renderList();
+            showToast('Subdomain removed from list.', 'error');
+        }
+    }
+
+    function renderList() {
+        const container = document.getElementById('subdomainList');
+        const empty = document.getElementById('emptyState');
+        const total = document.getElementById('totalCount');
+        const domain = document.getElementById('domainInput').value || 'yourdomain.com';
+        total.textContent = subdomains.length;
+        container.innerHTML = '';
+        if (subdomains.length === 0) {
+            container.appendChild(empty);
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        subdomains.forEach((sub, i) => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <span><i class="fas fa-link" style="color:#4facfe;"></i> ${sub}.${domain}</span>
+                <span class="status"><i class="fas fa-circle" style="font-size:8px;"></i> Active</span>
+                <button class="btn-delete" onclick="deleteSubdomain(${i})"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast';
+        if (type === 'error') t.classList.add('error');
+        t.classList.add('show');
+        clearTimeout(t.timeout);
+        t.timeout = setTimeout(() => t.classList.remove('show'), 4500);
+    }
+
+    document.getElementById('subInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') createSubdomain();
+    });
+
+    loadConfig();
+</script>
+</body>
+</html>
